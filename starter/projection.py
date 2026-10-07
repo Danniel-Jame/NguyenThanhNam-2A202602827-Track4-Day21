@@ -32,7 +32,16 @@ def velo_to_cam(points_xyz: np.ndarray, calib: KittiCalib) -> np.ndarray:
       3. Trả về 3 cột đầu.
     Tự kiểm: một điểm velodyne (10, 0, 0) phải có z_cam ~ 10 (phía trước camera).
     """
-    raise NotImplementedError("TODO(CP2): cài đặt velo_to_cam")
+    # 1. Chuyển sang toạ độ đồng nhất (N, 4) bằng cách thêm cột 1
+    ones = np.ones((points_xyz.shape[0], 1), dtype=points_xyz.dtype)
+    points_hom = np.hstack([points_xyz, ones])  # (N, 4)
+
+    # 2. Nhân với calib.T_cam_velo (4x4)
+    # T_cam_velo: [4x4], points_hom: [N, 4] -> (points_hom @ T_cam_velo.T) hoặc (T_cam_velo @ points_hom.T).T
+    points_cam_hom = points_hom @ calib.T_cam_velo.T  # (N, 4)
+
+    # 3. Trả về 3 cột đầu (X_cam, Y_cam, Z_cam)
+    return points_cam_hom[:, :3]
 
 
 def cam_to_image(points_cam: np.ndarray, P2: np.ndarray, image_shape: tuple[int, ...],
@@ -52,7 +61,48 @@ def cam_to_image(points_cam: np.ndarray, P2: np.ndarray, image_shape: tuple[int,
       3. Chia cho s để có (u, v). Chỉ chia với điểm có depth > min_depth.
       4. Lọc theo kích thước ảnh image_shape[:2] = (H, W).
     """
-    raise NotImplementedError("TODO(CP2): cài đặt cam_to_image")
+    n_points = points_cam.shape[0]
+
+    # 1. Lọc điểm không hợp lệ (NaN / Inf)
+    valid_finite = np.isfinite(points_cam).all(axis=1)
+
+    # Depth ban đầu (giá trị z_cam ở cột thứ 3)
+    depths = points_cam[:, 2]
+
+    # Mask kiểm tra độ sâu > min_depth
+    valid_depth = valid_finite & (depths > min_depth)
+
+    # Khởi tạo uv và mask đầu ra
+    uv = np.zeros((n_points, 2), dtype=np.float32)
+    
+    # 2. Toạ độ đồng nhất (N, 4), nhân P2 (3, 4)
+    if np.any(valid_depth):
+        pts_valid = points_cam[valid_depth]
+        ones = np.ones((pts_valid.shape[0], 1), dtype=pts_valid.dtype)
+        pts_valid_hom = np.hstack([pts_valid, ones])  # (M, 4)
+        
+        # Nhân với P2 (3, 4): (M, 4) @ P2.T -> (M, 3) [s*u, s*v, s]
+        proj = pts_valid_hom @ P2.T
+        
+        # 3. Chia cho s (thành phần s = proj[:, 2]) để lấy u, v
+        s = proj[:, 2:3]
+        # Tránh chia cho 0
+        s[s == 0] = 1e-6
+        uv_valid = proj[:, :2] / s
+        uv[valid_depth] = uv_valid
+
+    # 4. Lọc theo kích thước ảnh (0 <= u < W, 0 <= v < H)
+    H, W = image_shape[:2]
+    u = uv[:, 0]
+    v = uv[:, 1]
+
+    mask_in_image = (
+        valid_depth &
+        (u >= 0) & (u < W) &
+        (v >= 0) & (v < H)
+    )
+
+    return uv[mask_in_image], depths[mask_in_image], mask_in_image
 
 
 def project_velo_to_image(points: np.ndarray, calib: KittiCalib, image_shape: tuple[int, ...]):
