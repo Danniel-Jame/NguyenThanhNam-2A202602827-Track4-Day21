@@ -26,7 +26,7 @@ Dưới đây là số liệu chi tiết thu được từ thí nghiệm sweep g
 | Yaw 3.0° | 19,948 | 18.47% | 2,239 | 16.95 | Biến dạng hình học lớn |
 | Yaw 5.0° | 19,897 | 18.42% | 2,273 | 17.00 | Sai lệch hoàn toàn |
 
-![Biểu đồ Yaw Perturbation Sweep](figures/yaw_perturb_sweep_plot.png)
+![Biểu đồ Yaw Perturbation Sweep](/results/figures/yaw_perturb_sweep_plot.png)
 
 - File CSV dữ liệu chi tiết: `results/yaw_perturb_sweep.csv`
 - File biểu đồ minh họa: `results/figures/yaw_perturb_sweep_plot.png`
@@ -77,5 +77,8 @@ Trong hệ thống ADAS/Robot tự hành thực tế, hiện tượng lệch cal
 
 Ghi rõ đã dùng công cụ AI nào, dùng vào việc gì, và bạn đã tự kiểm chứng kết quả đó bằng cách nào. Nếu không dùng AI, ghi "Không sử dụng". Xem quy định ở `RULES.md` mục 2.
 
+
 | Công cụ | Dùng cho việc gì | Bạn đã kiểm chứng thế nào |
-|Gemini / ChatGPT|Hỗ trợ tổng hợp báo cáo và viết script vẽ biểu đồ|Đã tự đối chiếu trực tiếp dữ liệu từ file yaw_perturb_sweep.csv và kiểm tra hình ảnh xuất ra bằng file script tools/check_submission.py|
+| :--- | :--- | :--- |
+| Gemini / ChatGPT | Hỗ trợ tổng hợp báo cáo và viết script vẽ biểu đồ | Đã tự đối chiếu trực tiếp dữ liệu từ file `yaw_perturb_sweep.csv` và kiểm tra hình ảnh xuất ra bằng file script `tools/check_submission.py` |
+
